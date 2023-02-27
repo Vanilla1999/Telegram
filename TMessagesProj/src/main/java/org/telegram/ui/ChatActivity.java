@@ -318,6 +318,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import test.repository.FollowDialogRepo;
+
 @SuppressWarnings("unchecked")
 public class ChatActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate, LocationActivity.LocationActivityDelegate, ChatAttachAlertDocumentLayout.DocumentSelectActivityDelegate, ChatActivityInterface, FloatingDebugProvider {
     private final static boolean PULL_DOWN_BACK_FRAGMENT = false;
@@ -902,6 +904,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     private float pullingDownAnimateProgress;
     private AnimatorSet fragmentTransition;
     private ChatActivity backToPreviousFragment;
+    private FollowDialogRepo followDialogRepo;
     private Runnable fragmentTransitionRunnable = new Runnable() {
         @Override
         public void run() {
