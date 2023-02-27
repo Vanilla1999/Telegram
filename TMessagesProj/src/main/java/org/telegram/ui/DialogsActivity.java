@@ -212,7 +212,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean canShowFilterTabsView;
     private boolean filterTabsViewIsVisible;
     private int initialSearchType = -1;
-
+    private int FOLLOWED_CHATS = 123;
     private final String ACTION_MODE_SEARCH_DIALOGS_TAG = "search_dialogs_action_mode";
     private boolean isFirstTab = true;
     private boolean rightFragmentTransitionInProgress;
@@ -2168,7 +2168,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 }
                             });
                         }
-                        if (folderId != 0 && frozenDialogsList.isEmpty()) {
+                        if ((folderId != 0 && folderId != FOLLOWED_CHATS) && frozenDialogsList.isEmpty()) {
                             parentPage.listView.setEmptyView(null);
                             parentPage.progressView.setVisibility(View.INVISIBLE);
                         }
@@ -2733,11 +2733,17 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (searchString != null || folderId != 0) {
                 actionBar.setBackButtonDrawable(backDrawable = new BackDrawable(false));
             } else {
-                actionBar.setBackButtonDrawable(menuDrawable = new MenuDrawable());
-                menuDrawable.setRoundCap();
-                actionBar.setBackButtonContentDescription(LocaleController.getString("AccDescrOpenMenu", R.string.AccDescrOpenMenu));
+                if(folderId == FOLLOWED_CHATS){
+                    actionBar.setBackButtonDrawable(backDrawable = new BackDrawable(false));
+                } else {
+                    actionBar.setBackButtonDrawable(menuDrawable = new MenuDrawable());
+                    menuDrawable.setRoundCap();
+                    actionBar.setBackButtonContentDescription(LocaleController.getString("AccDescrOpenMenu", R.string.AccDescrOpenMenu));
+                }
             }
-            if (folderId != 0) {
+            if (folderId == FOLLOWED_CHATS) {
+                actionBar.setTitle(LocaleController.getString("FollowedChats", R.string.FollowedChats));
+            } else if (folderId != 0 && folderId != FOLLOWED_CHATS) {
                 actionBar.setTitle(LocaleController.getString("ArchivedChats", R.string.ArchivedChats));
             } else {
                 statusDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(null, AndroidUtilities.dp(26));
@@ -4399,7 +4405,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             contentView.addView(undoView[a], LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 8, 8));
         }
 
-        if (folderId != 0) {
+        if (folderId != 0 && folderId != FOLLOWED_CHATS) {
             viewPages[0].listView.setGlowColor(Theme.getColor(Theme.key_actionBarDefaultArchived));
             actionBar.setTitleColor(Theme.getColor(Theme.key_actionBarDefaultArchivedTitle));
             actionBar.setItemsColor(Theme.getColor(Theme.key_actionBarDefaultArchivedIcon), false);
@@ -4431,7 +4437,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             contentView.addView(blurredView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
 
-        actionBarDefaultPaint.setColor(Theme.getColor(folderId == 0 ? Theme.key_actionBarDefault : Theme.key_actionBarDefaultArchived));
+        actionBarDefaultPaint.setColor(Theme.getColor((folderId == 0 || folderId == FOLLOWED_CHATS) ? Theme.key_actionBarDefault : Theme.key_actionBarDefaultArchived));
         if (inPreviewMode) {
             final TLRPC.User currentUser = getUserConfig().getCurrentUser();
             avatarContainer = new ChatAvatarContainer(actionBar.getContext(), null, false);
@@ -4613,7 +4619,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     actionBar.getBackButton().setAlpha(progress == 1f ? 0f : 1f);
                 }
 
-                if (folderId != 0) {
+                if (folderId != 0 && folderId!= FOLLOWED_CHATS) {
                     actionBarDefaultPaint.setColor(
                         ColorUtils.blendARGB(
                             Theme.getColor(Theme.key_actionBarDefaultArchived),
@@ -5965,7 +5971,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             updateDrawerSwipeEnabled();
 
             searchViewPager.clear();
-            if (folderId != 0 && (rightSlidingDialogContainer == null || !rightSlidingDialogContainer.hasFragment())) {
+            if ((folderId != 0 && folderId != FOLLOWED_CHATS) && (rightSlidingDialogContainer == null || !rightSlidingDialogContainer.hasFragment())) {
                 FiltersView.MediaFilterData filterData = new FiltersView.MediaFilterData(R.drawable.chats_archive, LocaleController.getString("ArchiveSearchFilter", R.string.ArchiveSearchFilter), null, FiltersView.FILTER_TYPE_ARCHIVE);
                 addSearchFilter(filterData);
             }
@@ -6277,11 +6283,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     public void setSearchAnimationProgress(float progress, boolean full) {
         searchAnimationProgress = progress;
         if (whiteActionBar) {
-            int color1 = folderId != 0 ? Theme.getColor(Theme.key_actionBarDefaultArchivedIcon) : Theme.getColor(Theme.key_actionBarDefaultIcon);
+            int color1 = (folderId != 0 && folderId != FOLLOWED_CHATS) ? Theme.getColor(Theme.key_actionBarDefaultArchivedIcon) : Theme.getColor(Theme.key_actionBarDefaultIcon);
             actionBar.setItemsColor(ColorUtils.blendARGB(color1, Theme.getColor(Theme.key_actionBarActionModeDefaultIcon), searchAnimationProgress), false);
             actionBar.setItemsColor(ColorUtils.blendARGB(Theme.getColor(Theme.key_actionBarActionModeDefaultIcon), Theme.getColor(Theme.key_actionBarActionModeDefaultIcon), searchAnimationProgress), true);
 
-            color1 = folderId != 0 ? Theme.getColor(Theme.key_actionBarDefaultArchivedSelector) : Theme.getColor(Theme.key_actionBarDefaultSelector);
+            color1 = (folderId != 0 && folderId != FOLLOWED_CHATS) ? Theme.getColor(Theme.key_actionBarDefaultArchivedSelector) : Theme.getColor(Theme.key_actionBarDefaultSelector);
             int color2 = Theme.getColor(Theme.key_actionBarActionModeDefaultSelector);
             actionBar.setItemsBackgroundColor(ColorUtils.blendARGB(color1, color2, searchAnimationProgress), false);
         }
@@ -6652,6 +6658,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         }
                     } else {
                         ChatActivity chatActivity = new ChatActivity(args);
+                        args.putInt("folderId", FOLLOWED_CHATS);
                         if (topicId != 0) {
                             ForumUtilities.applyTopic(chatActivity, MessagesStorage.TopicKey.of(dialogId, topicId));
                         }
@@ -6661,7 +6668,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 chatActivity.setPreloadedSticker(sticker, true);
                             }
                         }
-                        presentFragment(chatActivity);
+                        presentFragment(new DialogsActivity(args));
                     }
                 }
             }

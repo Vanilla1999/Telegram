@@ -1163,6 +1163,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
         updateHasHints();
 
         MessagesController messagesController = MessagesController.getInstance(currentAccount);
+        // тут начинается заполнение айтемами
         ArrayList<TLRPC.Dialog> array = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
         dialogsCount = array.size();
         isEmpty = false;
