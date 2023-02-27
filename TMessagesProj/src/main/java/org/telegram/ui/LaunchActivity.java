@@ -566,8 +566,8 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     drawerLayoutContainer.closeDrawer(false);
                 } else if (id == 14) {
                     Bundle args = new Bundle();
-                    args.putLong("user_id", UserConfig.getInstance(currentAccount).getClientUserId());
-                    presentFragment(new ChatActivity(args));
+                    args.putInt("folderId", 123);
+                    presentFragment(new DialogsActivity(args));
                     drawerLayoutContainer.closeDrawer(false);
                 } else if (id == 12) {
                     if (Build.VERSION.SDK_INT >= 23) {

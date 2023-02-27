@@ -6658,7 +6658,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                         }
                     } else {
                         ChatActivity chatActivity = new ChatActivity(args);
-                        args.putInt("folderId", FOLLOWED_CHATS);
                         if (topicId != 0) {
                             ForumUtilities.applyTopic(chatActivity, MessagesStorage.TopicKey.of(dialogId, topicId));
                         }
@@ -6668,7 +6667,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 chatActivity.setPreloadedSticker(sticker, true);
                             }
                         }
-                        presentFragment(new DialogsActivity(args));
+                        presentFragment(chatActivity);
                     }
                 }
             }

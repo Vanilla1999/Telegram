@@ -1164,6 +1164,10 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
 
         MessagesController messagesController = MessagesController.getInstance(currentAccount);
         // тут начинается заполнение айтемами
+//        TLRPC.Dialog test= new TLRPC.TL_dialog();
+//        test.id = -1166834860;
+//        ArrayList<TLRPC.Dialog> array = new ArrayList<TLRPC.Dialog>();
+//        array.add(test);
         ArrayList<TLRPC.Dialog> array = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
         dialogsCount = array.size();
         isEmpty = false;

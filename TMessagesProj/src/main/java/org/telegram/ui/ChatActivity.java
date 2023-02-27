@@ -1248,6 +1248,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     private final static int share_contact = 17;
     private final static int mute = 18;
     private final static int report = 21;
+    private final static int followed = 123;
+    private final static int unFollowed = -123;
     private final static int star = 22;
     private final static int edit = 23;
     private final static int add_shortcut = 24;
@@ -2772,6 +2774,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(final int id) {
+                //
                 if (id == -1) {
                     if (actionBar.isActionModeShowed()) {
                         clearSelectionMode();
@@ -2903,7 +2906,16 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     } catch (Exception e) {
                         FileLog.e(e);
                     }
-                } else if (id == report) {
+                }else if (id == followed) {
+                    // добавить в бд + смена кнопки
+                  //  headerItem.toggleSubMenu(attach, attachItem.createView());
+                    headerItem.hideSubItem(followed);
+                    headerItem.showSubItem(unFollowed);
+                } else if (id == unFollowed) {
+                    // удаление  из бд + смена кнопки
+                    headerItem.hideSubItem(unFollowed);
+                    headerItem.showSubItem(followed);
+                }else if (id == report) {
                     AlertsCreator.createReportAlert(getParentActivity(), dialog_id, 0, ChatActivity.this, themeDelegate, null);
                 } else if (id == star) {
                     for (int a = 0; a < 2; a++) {
@@ -3317,6 +3329,13 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                         headerItem.lazilyAddSubItem(delete_chat, R.drawable.msg_delete, LocaleController.getString("DeleteChatUser", R.string.DeleteChatUser));
                     }
                 }
+            }
+            if (currentChat != null && !currentChat.creator && !ChatObject.hasAdminRights(currentChat)) {
+                headerItem.lazilyAddSubItem(followed, R.drawable.msg_report, LocaleController.getString("FollowedChatsAdd", R.string.FollowedChatsAdd));
+            }
+            if (currentChat != null && !currentChat.creator && !ChatObject.hasAdminRights(currentChat)) {
+                 headerItem.lazilyAddSubItem(unFollowed, R.drawable.msg_report, LocaleController.getString("FollowedChatsRemove", R.string.FollowedChatsRemove));
+                headerItem.hideSubItem(unFollowed);
             }
             if (currentUser != null && currentUser.self) {
                 headerItem.lazilyAddSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString("AddShortcut", R.string.AddShortcut));
