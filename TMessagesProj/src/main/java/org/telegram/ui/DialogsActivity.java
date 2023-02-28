@@ -205,6 +205,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.reactivex.disposables.CompositeDisposable;
+
 public class DialogsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, FloatingDebugProvider {
 
     public final static boolean DISPLAY_SPEEDOMETER_IN_DOWNLOADS_SEARCH = true;
@@ -217,7 +219,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean isFirstTab = true;
     private boolean rightFragmentTransitionInProgress;
     private boolean allowGlobalSearch = true;
-
+    private CompositeDisposable compositeDisposable;
     private TLRPC.RequestPeerType requestPeerType;
     private long requestPeerBotId;
 
@@ -2418,6 +2420,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
+        compositeDisposable.clear();
         if (searchString == null) {
             getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
@@ -2532,6 +2535,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     @Override
     public View createView(final Context context) {
+        compositeDisposable = null;
+        compositeDisposable = new CompositeDisposable();
         searching = false;
         searchWas = false;
         pacmanAnimation = null;
@@ -3604,7 +3609,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 viewPage.pullForegroundDrawable.setWillDraw(viewPage.archivePullViewState != ARCHIVE_ITEM_STATE_PINNED);
             }
 
-            viewPage.dialogsAdapter = new DialogsAdapter(this, context, viewPage.dialogsType, folderId, onlySelect, selectedDialogs, currentAccount, requestPeerType) {
+            viewPage.dialogsAdapter = new DialogsAdapter(this, context, viewPage.dialogsType, folderId, onlySelect, selectedDialogs, currentAccount, requestPeerType,compositeDisposable) {
                 @Override
                 public void notifyDataSetChanged() {
                     viewPage.lastItemsCount = getItemCount();
@@ -4534,7 +4539,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     LinearLayoutManager layoutManager = new LinearLayoutManager(context);
                     layoutManager.setNeedFixEndGap(false);
                     transitionPage.animationSupportListView.setLayoutManager(layoutManager);
-                    transitionPage.animationSupportDialogsAdapter = new DialogsAdapter(DialogsActivity.this, context, transitionPage.dialogsType, folderId, onlySelect, selectedDialogs, currentAccount, requestPeerType);
+                    transitionPage.animationSupportDialogsAdapter = new DialogsAdapter(DialogsActivity.this, context, transitionPage.dialogsType, folderId, onlySelect, selectedDialogs, currentAccount, requestPeerType,compositeDisposable);
                     transitionPage.animationSupportDialogsAdapter.setIsTransitionSupport();
                     transitionPage.animationSupportListView.setAdapter(transitionPage.animationSupportDialogsAdapter);
                     transitionPage.addView(transitionPage.animationSupportListView);
