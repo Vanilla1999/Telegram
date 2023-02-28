@@ -9,6 +9,7 @@ import androidx.room.Update;
 import java.util.List;
 
 import io.reactivex.Completable;
+import io.reactivex.Maybe;
 import io.reactivex.Single;
 import test.room.entity.FollowEntity;
 
@@ -19,7 +20,7 @@ public interface FollowedDialogsDAO {
     Single<List<FollowEntity>> getAll();
 
     @Query("SELECT * FROM followDialogTable WHERE idDialog = :idDialog")
-    Single<FollowEntity> getById(long idDialog);
+    Maybe<FollowEntity> getById(long idDialog);
 
     @Insert
     Completable insert(FollowEntity employee);
@@ -27,6 +28,6 @@ public interface FollowedDialogsDAO {
     @Update
     Completable  update(FollowEntity employee);
 
-    @Delete
-    Completable  delete(FollowEntity employee);
+    @Query("DELETE  FROM followDialogTable WHERE idDialog = :idDialog")
+    Completable  delete(long idDialog);
 }

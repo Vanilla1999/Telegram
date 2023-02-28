@@ -13,9 +13,9 @@ public class FollowEntity {
     @PrimaryKey(autoGenerate = true)
     public long id;
 
-    public int idDialog;
+    public long idDialog;
 
-    public FollowEntity(int idDialog) {
+    public FollowEntity(long idDialog) {
         this.idDialog = idDialog;
     }
     public FollowDialog convertToModel(){

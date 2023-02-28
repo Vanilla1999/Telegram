@@ -30,6 +30,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
 import org.telegram.messenger.AndroidUtilities;
+import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DialogObject;
@@ -70,6 +71,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
+
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
+import test.repository.FollowDialogRepo;
+import test.repository.FollowDialogRepoImpl;
 
 public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements DialogCell.DialogCellDelegate {
     public final static int VIEW_TYPE_DIALOG = 0,
@@ -114,7 +120,8 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
     private PullForegroundDrawable pullForegroundDrawable;
     ArrayList<ItemInternal> itemInternals = new ArrayList<>();
     ArrayList<ItemInternal> oldItems = new ArrayList<>();
-
+    private FollowDialogRepo followDialogRepo;
+    private CompositeDisposable compositeDisposable = new CompositeDisposable();
     private Drawable arrowDrawable;
 
     private DialogsPreloader preloader;
@@ -136,6 +143,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
         hasHints = folder == 0 && type == 0 && !onlySelect;
         selectedDialogs = selected;
         currentAccount = account;
+        followDialogRepo = new FollowDialogRepoImpl(ApplicationLoader.instance.getDatabase());
         if (folderId == 1) {
             SharedPreferences preferences = MessagesController.getGlobalMainSettings();
             showArchiveHint = preferences.getBoolean("archivehint", true);
@@ -1168,6 +1176,11 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
 //        test.id = -1166834860;
 //        ArrayList<TLRPC.Dialog> array = new ArrayList<TLRPC.Dialog>();
 //        array.add(test);
+//        if(folderId == 123){
+//            compositeDisposable.add(followDialogRepo.getAllDialogs()
+//                    .subscribeOn(Schedulers.io())
+//                    .observeOn(An))
+//        }
         ArrayList<TLRPC.Dialog> array = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
         dialogsCount = array.size();
         isEmpty = false;

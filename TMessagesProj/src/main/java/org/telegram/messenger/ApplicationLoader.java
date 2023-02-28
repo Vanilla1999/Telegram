@@ -259,6 +259,7 @@ public class ApplicationLoader extends Application {
         }
 
         super.onCreate();
+        instance = this;
         database = Room.databaseBuilder(this, DatabaseMain.class, "database")
                 .build();
         if (BuildVars.LOGS_ENABLED) {

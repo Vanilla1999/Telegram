@@ -3,8 +3,8 @@ package test.room.model;
 import test.room.entity.FollowEntity;
 
 public class FollowDialog {
-    public int idDialog;
-    public FollowDialog(int idDialog){
+    public long idDialog;
+    public FollowDialog(long idDialog){
         this.idDialog = idDialog;
     }
     public FollowEntity convertToEntity(){
