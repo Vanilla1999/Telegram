@@ -8,15 +8,12 @@
 
 package org.telegram.ui;
 
-import static test.ui.TestStaticChatActivity.addFollowToHeaderItem;
-import static test.ui.TestStaticChatActivity.clearCompositeDisposeble;
-import static test.ui.TestStaticChatActivity.clearFollowRepo;
-import static test.ui.TestStaticChatActivity.ifClickToFollowChat;
-import static test.ui.TestStaticChatActivity.ifClickToUnFollowChat;
-import static test.ui.TestStaticChatActivity.initCompositeDisposeble;
-import static test.ui.TestStaticChatActivity.initFollowRepo;
-import static test.utils.Constants.followDialogList;
-import static test.utils.Constants.unfollowDialogList;
+import static test.ui.ChatAcitity.TestStaticChatActivity.addFollowToHeaderItem;
+import static test.ui.ChatAcitity.TestStaticChatActivity.clearCompositeDisposeble;
+import static test.ui.ChatAcitity.TestStaticChatActivity.clearFollowRepo;
+import static test.ui.ChatAcitity.TestStaticChatActivity.ifClickToFollowChat;
+import static test.ui.ChatAcitity.TestStaticChatActivity.ifClickToUnFollowChat;
+import static test.ui.ChatAcitity.TestStaticChatActivity.initCompositeDisposeble;
 
 import android.Manifest;
 import android.animation.Animator;
@@ -327,12 +324,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
-import test.ui.TestStaticChatActivity;
-import test.utils.Constants;
 
 @SuppressWarnings("unchecked")
 public class ChatActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate, LocationActivity.LocationActivityDelegate, ChatAttachAlertDocumentLayout.DocumentSelectActivityDelegate, ChatActivityInterface, FloatingDebugProvider {
@@ -2066,7 +2057,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         scrollToTopOnResume = arguments.getBoolean("scrollToTopOnResume", false);
         needRemovePreviousSameChatActivity = arguments.getBoolean("need_remove_previous_same_chat_activity", true);
         justCreatedChat = arguments.getBoolean("just_created_chat", false);
-        initFollowRepo();
         if (chatId != 0) {
             currentChat = getMessagesController().getChat(chatId);
             if (currentChat == null) {

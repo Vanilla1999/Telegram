@@ -1,4 +1,4 @@
-package test.ui;
+package test.ui.ChatAcitity;
 
 import static test.utils.Constants.followDialogList;
 import static test.utils.Constants.unfollowDialogList;
@@ -18,36 +18,20 @@ import io.reactivex.schedulers.Schedulers;
 import test.repository.FollowDialogRepo;
 import test.repository.FollowDialogRepoImpl;
 import test.room.model.FollowDialog;
+import test.ui.BaseTestActivity;
 import test.utils.Constants;
 
-public class TestStaticChatActivity {
-    static CompositeDisposable compositeDisposable = null;
-    static FollowDialogRepo followDialogRepo = null;
-
-    public static void clearCompositeDisposeble() {
-        compositeDisposable.clear();
-    }
-
-    public static void initCompositeDisposeble() {
-        compositeDisposable = new CompositeDisposable();
-    }
-
-    public static void initFollowRepo() {
-        followDialogRepo = new FollowDialogRepoImpl(ApplicationLoader.instance.getDatabase());
-    }
-
-    public static void clearFollowRepo() {
-        followDialogRepo = null;
-    }
+public class TestStaticChatActivity extends BaseTestActivity {
 
     public static void addFollowToHeaderItem(ActionBarMenuItem headerItem, Bundle arguments, TLRPC.Chat currentChat) {
         if (currentChat != null && !currentChat.creator && !ChatObject.hasAdminRights(currentChat)) {
+            initFollowRepo();
+            initCompositeDisposeble();
             headerItem.lazilyAddSubItem(followDialogList, R.drawable.msg_report, LocaleController.getString("FollowedChatsAdd", R.string.FollowedChatsAdd));
             headerItem.lazilyAddSubItem(unfollowDialogList, R.drawable.msg_report, LocaleController.getString("FollowedChatsRemove", R.string.FollowedChatsRemove));
             headerItem.hideSubItem(followDialogList);
             headerItem.showSubItem(unfollowDialogList);
             final long chatId = arguments.getLong("chat_id", 0);
-            followDialogRepo = null;
             followDialogRepo = new FollowDialogRepoImpl(ApplicationLoader.instance.getDatabase());
             compositeDisposable.add(
                     followDialogRepo.getDialogsById(-chatId)

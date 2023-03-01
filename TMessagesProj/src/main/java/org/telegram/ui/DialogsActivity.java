@@ -8,6 +8,11 @@
 
 package org.telegram.ui;
 
+import static test.ui.BaseTestActivity.clearCompositeDisposeble;
+import static test.ui.BaseTestActivity.clearFollowRepo;
+import static test.ui.BaseTestActivity.initCompositeDisposeble;
+import static test.ui.DialogActivity.TestStatckDialogActivity.initFollowRepo;
+
 import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -205,11 +210,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
 import test.repository.FollowDialogRepo;
-import test.repository.FollowDialogRepoImpl;
 import test.utils.Constants;
 
 public class DialogsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, FloatingDebugProvider {
@@ -224,7 +225,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean isFirstTab = true;
     private boolean rightFragmentTransitionInProgress;
     private boolean allowGlobalSearch = true;
-    private CompositeDisposable compositeDisposable;
     private TLRPC.RequestPeerType requestPeerType;
     private long requestPeerBotId;
     private FollowDialogRepo followDialogRepo;
@@ -2249,7 +2249,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public boolean onFragmentCreate() {
         super.onFragmentCreate();
-
         if (arguments != null) {
             onlySelect = arguments.getBoolean("onlySelect", false);
             canSelectTopics = arguments.getBoolean("canSelectTopics", false);
@@ -2424,8 +2423,8 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
-        if(folderId == Constants.followDialogList)
-        compositeDisposable.clear();
+        clearFollowRepo();
+        clearCompositeDisposeble();
         if (searchString == null) {
             getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
@@ -2540,11 +2539,9 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     @Override
     public View createView(final Context context) {
-        followDialogRepo = null;
-        compositeDisposable =null;
         if(folderId == Constants.followDialogList) {
-            compositeDisposable = new CompositeDisposable();
-            followDialogRepo = new FollowDialogRepoImpl(ApplicationLoader.instance.getDatabase());
+            initFollowRepo();
+            initCompositeDisposeble();
         }
         searching = false;
         searchWas = false;

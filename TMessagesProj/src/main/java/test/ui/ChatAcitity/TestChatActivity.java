@@ -1,6 +1,5 @@
-package test.ui;
+package test.ui.ChatAcitity;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
 
