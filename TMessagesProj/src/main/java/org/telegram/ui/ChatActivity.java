@@ -8,6 +8,16 @@
 
 package org.telegram.ui;
 
+import static test.ui.TestStaticChatActivity.addFollowToHeaderItem;
+import static test.ui.TestStaticChatActivity.clearCompositeDisposeble;
+import static test.ui.TestStaticChatActivity.clearFollowRepo;
+import static test.ui.TestStaticChatActivity.ifClickToFollowChat;
+import static test.ui.TestStaticChatActivity.ifClickToUnFollowChat;
+import static test.ui.TestStaticChatActivity.initCompositeDisposeble;
+import static test.ui.TestStaticChatActivity.initFollowRepo;
+import static test.utils.Constants.followDialogList;
+import static test.utils.Constants.unfollowDialogList;
+
 import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -321,9 +331,8 @@ import java.util.regex.Pattern;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
-import test.repository.FollowDialogRepo;
-import test.repository.FollowDialogRepoImpl;
-import test.room.model.FollowDialog;
+import test.ui.TestStaticChatActivity;
+import test.utils.Constants;
 
 @SuppressWarnings("unchecked")
 public class ChatActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate, LocationActivity.LocationActivityDelegate, ChatAttachAlertDocumentLayout.DocumentSelectActivityDelegate, ChatActivityInterface, FloatingDebugProvider {
@@ -839,8 +848,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             AndroidUtilities.runOnUIThread(updateDeleteItemRunnable, 1000);
         }
     };
-    private FollowDialogRepo followDialogRepo;
-    private CompositeDisposable compositeDisposable = null;
     private ChatActivityDelegate chatActivityDelegate;
     private RecyclerAnimationScrollHelper chatScrollHelper;
 
@@ -1256,8 +1263,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     private final static int share_contact = 17;
     private final static int mute = 18;
     private final static int report = 21;
-    private final static int followed = 123;
-    private final static int unFollowed = -123;
     private final static int star = 22;
     private final static int edit = 23;
     private final static int add_shortcut = 24;
@@ -2061,8 +2066,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         scrollToTopOnResume = arguments.getBoolean("scrollToTopOnResume", false);
         needRemovePreviousSameChatActivity = arguments.getBoolean("need_remove_previous_same_chat_activity", true);
         justCreatedChat = arguments.getBoolean("just_created_chat", false);
-        followDialogRepo = null;
-        followDialogRepo = new FollowDialogRepoImpl(ApplicationLoader.instance.getDatabase());
+        initFollowRepo();
         if (chatId != 0) {
             currentChat = getMessagesController().getChat(chatId);
             if (currentChat == null) {
@@ -2514,7 +2518,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
-        compositeDisposable.clear();
+        clearCompositeDisposeble();
+        clearFollowRepo();
         if (chatActivityEnterView != null) {
             chatActivityEnterView.onDestroy();
         }
@@ -2710,7 +2715,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
 
     @Override
     public View createView(Context context) {
-            compositeDisposable = new CompositeDisposable();
+        initCompositeDisposeble();
         if (textSelectionHelper == null) {
             if (textSelectionHelpersCache != null && !textSelectionHelpersCache.isEmpty()) {
                 textSelectionHelper = textSelectionHelpersCache.remove(0);
@@ -2916,36 +2921,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     } catch (Exception e) {
                         FileLog.e(e);
                     }
-                }else if (id == followed) {
-                    // добавить в бд + смена кнопки
-                  //  headerItem.toggleSubMenu(attach, attachItem.createView());
-                    final long chatId = arguments.getLong("chat_id", 0);
-                    compositeDisposable.add(followDialogRepo.saveDialog(new FollowDialog(-chatId))
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(
-                                    () -> {
-                                headerItem.hideSubItem(followed);
-                                headerItem.showSubItem(unFollowed);
-                            },error ->{
-
-                                    }
-                            ));
-                } else if (id == unFollowed) {
-                    // удаление  из бд + смена кнопки
-                    final long chatId = arguments.getLong("chat_id", 0);
-                    compositeDisposable.add(followDialogRepo.deleteDialog(-chatId)
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(
-                                    () -> {
-                                        headerItem.hideSubItem(unFollowed);
-                                        headerItem.showSubItem(followed);
-                                    },error ->{
-
-                                    }
-                            ));
-                }else if (id == report) {
+                } else if (id == report) {
                     AlertsCreator.createReportAlert(getParentActivity(), dialog_id, 0, ChatActivity.this, themeDelegate, null);
                 } else if (id == star) {
                     for (int a = 0; a < 2; a++) {
@@ -3052,6 +3028,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
 //                    bundle.putLong("chat_id", -dialog_id);
 //                    presentFragment(new TopicsFragment(bundle));
                 }
+                ifClickToFollowChat(headerItem,id,arguments);
+                ifClickToUnFollowChat(headerItem,id,arguments);
             }
         });
         View backButton = actionBar.getBackButton();
@@ -3360,30 +3338,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     }
                 }
             }
-            if (currentChat != null && !currentChat.creator && !ChatObject.hasAdminRights(currentChat)) {
-                headerItem.lazilyAddSubItem(followed, R.drawable.msg_report, LocaleController.getString("FollowedChatsAdd", R.string.FollowedChatsAdd));
-                headerItem.lazilyAddSubItem(unFollowed, R.drawable.msg_report, LocaleController.getString("FollowedChatsRemove", R.string.FollowedChatsRemove));
-                headerItem.hideSubItem(unFollowed);
-                headerItem.showSubItem(followed);
-                final long chatId = arguments.getLong("chat_id", 0);
-                followDialogRepo = null;
-                followDialogRepo = new FollowDialogRepoImpl(ApplicationLoader.instance.getDatabase());
-                compositeDisposable.add(
-                        followDialogRepo.getDialogsById(-chatId)
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe((listFollowed -> {
-                                    headerItem.hideSubItem(followed);
-                                    headerItem.showSubItem(unFollowed);
-                                }), (error -> {
-                                    // что то на ошибку
-
-                                }), () -> {
-
-                                    headerItem.hideSubItem(unFollowed);
-                                    headerItem.showSubItem(followed);
-                                }));
-            }
+            addFollowToHeaderItem(headerItem,arguments,currentChat);
             if (currentUser != null && currentUser.self) {
                 headerItem.lazilyAddSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString("AddShortcut", R.string.AddShortcut));
             }
