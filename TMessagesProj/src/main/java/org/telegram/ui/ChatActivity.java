@@ -840,7 +840,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         }
     };
     private FollowDialogRepo followDialogRepo;
-    private CompositeDisposable compositeDisposable = new CompositeDisposable();
+    private CompositeDisposable compositeDisposable = null;
     private ChatActivityDelegate chatActivityDelegate;
     private RecyclerAnimationScrollHelper chatScrollHelper;
 
@@ -2710,6 +2710,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
 
     @Override
     public View createView(Context context) {
+            compositeDisposable = new CompositeDisposable();
         if (textSelectionHelper == null) {
             if (textSelectionHelpersCache != null && !textSelectionHelpersCache.isEmpty()) {
                 textSelectionHelper = textSelectionHelpersCache.remove(0);

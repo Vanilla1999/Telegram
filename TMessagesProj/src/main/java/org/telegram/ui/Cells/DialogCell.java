@@ -111,6 +111,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Stack;
+import java.util.concurrent.CountDownLatch;
 
 public class DialogCell extends BaseCell {
 
@@ -859,9 +860,11 @@ public class DialogCell extends BaseCell {
             return;
         }
         if (isDialogCell) {
-            boolean needUpdate = updateHelper.update();
-            if (!needUpdate && currentDialogFolderId == 0 && encryptedChat == null) {
-                return;
+            if(MessagesController.getInstance(currentAccount).dialogs_dict.get(currentDialogId) != null) {
+                boolean needUpdate = updateHelper.update();
+                if (!needUpdate && currentDialogFolderId == 0 && encryptedChat == null) {
+                    return;
+                }
             }
         }
 
@@ -2583,6 +2586,24 @@ public class DialogCell extends BaseCell {
                     currentEditDate = 0;
                     lastMessageDate = 0;
                     clearingDialog = false;
+                    final TLRPC.Chat currentChat = MessagesController.getInstance(currentAccount).getChat(currentDialogId);
+                    if (currentChat == null) {
+                        final CountDownLatch countDownLatch = new CountDownLatch(1);
+                        final MessagesStorage messagesStorage = MessagesStorage.getInstance(currentAccount);
+                        final TLRPC.Chat[] chat = {null};
+                        messagesStorage.getStorageQueue().postRunnable(() -> {
+                            chat[0] = messagesStorage.getChat(currentDialogId);
+                            countDownLatch.countDown();
+                        });
+                        try {
+                            countDownLatch.await();
+                        } catch (Exception e) {
+                            FileLog.e(e);
+                        }
+                        if (chat[0] != null) {
+                                    MessagesController.getInstance(currentAccount).putChat(chat[0], true);
+                        }
+                    }
                 }
                 drawAvatarSelector = currentDialogId != 0 && currentDialogId == RightSlidingDialogContainer.fragmentDialogId;
             } else {

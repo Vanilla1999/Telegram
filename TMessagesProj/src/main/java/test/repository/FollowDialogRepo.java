@@ -13,6 +13,8 @@ public interface FollowDialogRepo {
 
     Completable deleteDialog(long dialogId);
 
+    Completable deleteSelectedDialog(List<Long> dialogIdList);
+
     Single<List<FollowDialog>> getAllDialogs();
 
     Maybe<FollowDialog> getDialogsById(long dialogId);

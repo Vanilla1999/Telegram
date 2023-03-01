@@ -74,6 +74,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -140,7 +141,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
     private TLRPC.RequestPeerType requestPeerType;
     public boolean isEmpty;
 
-    public DialogsAdapter(DialogsActivity fragment, Context context, int type, int folder, boolean onlySelect, ArrayList<Long> selected, int account, TLRPC.RequestPeerType requestPeerType,CompositeDisposable compositeDisposable) {
+    public DialogsAdapter(DialogsActivity fragment, Context context, int type, int folder, boolean onlySelect, ArrayList<Long> selected, int account, TLRPC.RequestPeerType requestPeerType,CompositeDisposable compositeDisposable,FollowDialogRepo followDialogRepo) {
         mContext = context;
         parentFragment = fragment;
         dialogsType = type;
@@ -150,7 +151,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
         this.compositeDisposable = compositeDisposable;
         selectedDialogs = selected;
         currentAccount = account;
-        followDialogRepo = new FollowDialogRepoImpl(ApplicationLoader.instance.getDatabase());
+        this.followDialogRepo =followDialogRepo;
         if (folderId == 1) {
             SharedPreferences preferences = MessagesController.getGlobalMainSettings();
             showArchiveHint = preferences.getBoolean("archivehint", true);
@@ -307,6 +308,14 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
         public int hashCode() {
             return Objects.hash(dialog, recentMeUrl, contact);
         }
+    }
+
+    public ArrayList<TLRPC.Dialog> getData() {
+        ArrayList<TLRPC.Dialog> array = new ArrayList<TLRPC.Dialog>();
+        for(int i = 0; i<itemInternals.size();i++){
+            array.add(itemInternals.get(i).dialog);
+        }
+        return array;
     }
 
     public TLObject getItem(int i) {

@@ -31,6 +31,11 @@ public class FollowDialogRepoImpl implements FollowDialogRepo {
     }
 
     @Override
+    public Completable deleteSelectedDialog(List<Long> dialogIdList) {
+        return databaseMain.followedDialogs().deleteSelected(dialogIdList);
+    }
+
+    @Override
     public Single<List<FollowDialog>> getAllDialogs() {
         return databaseMain.followedDialogs().getAll().flatMap(followEntities -> {
             List<FollowDialog> listModel = followEntities.stream().map(FollowEntity::convertToModel).collect(Collectors.toList());

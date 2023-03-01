@@ -205,7 +205,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
+import test.repository.FollowDialogRepo;
+import test.repository.FollowDialogRepoImpl;
+import test.utils.Constants;
 
 public class DialogsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, FloatingDebugProvider {
 
@@ -222,7 +227,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private CompositeDisposable compositeDisposable;
     private TLRPC.RequestPeerType requestPeerType;
     private long requestPeerBotId;
-
+    private FollowDialogRepo followDialogRepo;
     public MessagesStorage.TopicKey getOpenedDialogId() {
         return openedDialogId;
     }
@@ -2255,8 +2260,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             addToGroupAlertString = arguments.getString("addToGroupAlertString");
             allowSwitchAccount = arguments.getBoolean("allowSwitchAccount");
             checkCanWrite = arguments.getBoolean("checkCanWrite", true);
-            afterSignup = arguments.getBoolean("afterSignup", false);
-            folderId = arguments.getInt("folderId", 0);
+            afterSignup = arguments.getBoolean("afterSignup", false);folderId = arguments.getInt("folderId", 0);
             resetDelegate = arguments.getBoolean("resetDelegate", true);
             messagesCount = arguments.getInt("messagesCount", 0);
             hasPoll = arguments.getInt("hasPoll", 0);
@@ -2420,6 +2424,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
+        if(folderId == Constants.followDialogList)
         compositeDisposable.clear();
         if (searchString == null) {
             getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
@@ -2535,8 +2540,12 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     @Override
     public View createView(final Context context) {
-        compositeDisposable = null;
-        compositeDisposable = new CompositeDisposable();
+        followDialogRepo = null;
+        compositeDisposable =null;
+        if(folderId == Constants.followDialogList) {
+            compositeDisposable = new CompositeDisposable();
+            followDialogRepo = new FollowDialogRepoImpl(ApplicationLoader.instance.getDatabase());
+        }
         searching = false;
         searchWas = false;
         pacmanAnimation = null;
@@ -3609,7 +3618,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 viewPage.pullForegroundDrawable.setWillDraw(viewPage.archivePullViewState != ARCHIVE_ITEM_STATE_PINNED);
             }
 
-            viewPage.dialogsAdapter = new DialogsAdapter(this, context, viewPage.dialogsType, folderId, onlySelect, selectedDialogs, currentAccount, requestPeerType,compositeDisposable) {
+            viewPage.dialogsAdapter = new DialogsAdapter(this, context, viewPage.dialogsType, folderId, onlySelect, selectedDialogs, currentAccount, requestPeerType,compositeDisposable,followDialogRepo) {
                 @Override
                 public void notifyDataSetChanged() {
                     viewPage.lastItemsCount = getItemCount();
@@ -4539,7 +4548,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     LinearLayoutManager layoutManager = new LinearLayoutManager(context);
                     layoutManager.setNeedFixEndGap(false);
                     transitionPage.animationSupportListView.setLayoutManager(layoutManager);
-                    transitionPage.animationSupportDialogsAdapter = new DialogsAdapter(DialogsActivity.this, context, transitionPage.dialogsType, folderId, onlySelect, selectedDialogs, currentAccount, requestPeerType,compositeDisposable);
+                    transitionPage.animationSupportDialogsAdapter = new DialogsAdapter(DialogsActivity.this, context, transitionPage.dialogsType, folderId, onlySelect, selectedDialogs, currentAccount, requestPeerType,compositeDisposable,followDialogRepo);
                     transitionPage.animationSupportDialogsAdapter.setIsTransitionSupport();
                     transitionPage.animationSupportListView.setAdapter(transitionPage.animationSupportDialogsAdapter);
                     transitionPage.addView(transitionPage.animationSupportListView);
@@ -6761,7 +6770,10 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             return false;
         } else {
             DialogsAdapter dialogsAdapter = (DialogsAdapter) adapter;
-            ArrayList<TLRPC.Dialog> dialogs = getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
+            ArrayList<TLRPC.Dialog> dialogs ;
+            if(folderId != Constants.followDialogList)
+            dialogs = getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
+            else  dialogs = dialogsAdapter.getData();
             position = dialogsAdapter.fixPosition(position);
             if (position < 0 || position >= dialogs.size()) {
                 return false;
@@ -6802,7 +6814,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         final boolean hasUnread = getMessagesStorage().getArchiveUnreadCount() != 0;
 
         int[] icons = new int[]{
-                hasUnread ? R.drawable.msg_markread : 0,
+                hasUnread ? R.drawable.msg_delete : 0,
                 SharedConfig.archiveHidden ? R.drawable.chats_pin : R.drawable.chats_unpin,
         };
         CharSequence[] items = new CharSequence[]{
@@ -7133,6 +7145,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
         deleteItem.setTextAndIcon(LocaleController.getString("Delete", R.string.Delete), R.drawable.msg_delete);
         deleteItem.setMinimumWidth(160);
         deleteItem.setOnClickListener(e -> {
+            if(folderId != Constants.followDialogList)
             performSelectedDialogsAction(dialogIdArray, delete, false, false);
             finishPreviewFragment();
         });
@@ -7616,6 +7629,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     } else {
                         AlertsCreator.createClearOrDeleteDialogAlert(DialogsActivity.this, action == clear, chat, user, DialogObject.isEncryptedDialog(dialog.id), action == delete, (param) -> {
                             hideActionMode(false);
+
                             if (action == clear && ChatObject.isChannel(chat) && (!chat.megagroup || ChatObject.isPublic(chat))) {
                                 getMessagesController().deleteDialog(selectedDialog, 2, param);
                             } else {

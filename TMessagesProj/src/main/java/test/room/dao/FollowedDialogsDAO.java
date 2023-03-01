@@ -30,4 +30,7 @@ public interface FollowedDialogsDAO {
 
     @Query("DELETE  FROM followDialogTable WHERE idDialog = :idDialog")
     Completable  delete(long idDialog);
+
+    @Query("DELETE  FROM followDialogTable WHERE idDialog in (:dialogIdList)")
+    Completable  deleteSelected(List<Long> dialogIdList);
 }
