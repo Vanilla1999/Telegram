@@ -10,6 +10,8 @@ package org.telegram.ui.Adapters;
 
 import static org.telegram.ui.DialogsActivity.DIALOGS_TYPE_DEFAULT;
 
+import static test.ui.DialogActivity.adapter.TestDialogAdapter.updateItems;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.PorterDuff;
@@ -32,7 +34,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager.widget.ViewPager;
 
 import org.telegram.messenger.AndroidUtilities;
-import org.telegram.messenger.ApplicationLoader;
 import org.telegram.messenger.ChatObject;
 import org.telegram.messenger.ContactsController;
 import org.telegram.messenger.DialogObject;
@@ -74,13 +75,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
-import test.repository.FollowDialogRepo;
-import test.repository.FollowDialogRepoImpl;
 import test.room.model.FollowDialog;
 import test.utils.Constants;
 
@@ -127,8 +121,6 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
     private PullForegroundDrawable pullForegroundDrawable;
     ArrayList<ItemInternal> itemInternals = new ArrayList<>();
     ArrayList<ItemInternal> oldItems = new ArrayList<>();
-    private FollowDialogRepo followDialogRepo;
-    private CompositeDisposable compositeDisposable;
     private Drawable arrowDrawable;
 
     private DialogsPreloader preloader;
@@ -141,17 +133,15 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
     private TLRPC.RequestPeerType requestPeerType;
     public boolean isEmpty;
 
-    public DialogsAdapter(DialogsActivity fragment, Context context, int type, int folder, boolean onlySelect, ArrayList<Long> selected, int account, TLRPC.RequestPeerType requestPeerType,CompositeDisposable compositeDisposable,FollowDialogRepo followDialogRepo) {
+    public DialogsAdapter(DialogsActivity fragment, Context context, int type, int folder, boolean onlySelect, ArrayList<Long> selected, int account, TLRPC.RequestPeerType requestPeerType) {
         mContext = context;
         parentFragment = fragment;
         dialogsType = type;
         folderId = folder;
         isOnlySelect = onlySelect;
         hasHints = (folder == 0 || folder == Constants.followDialogList) && type == 0 && !onlySelect;
-        this.compositeDisposable = compositeDisposable;
         selectedDialogs = selected;
         currentAccount = account;
-        this.followDialogRepo =followDialogRepo;
         if (folderId == 1) {
             SharedPreferences preferences = MessagesController.getGlobalMainSettings();
             showArchiveHint = preferences.getBoolean("archivehint", true);
@@ -312,7 +302,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
 
     public ArrayList<TLRPC.Dialog> getData() {
         ArrayList<TLRPC.Dialog> array = new ArrayList<TLRPC.Dialog>();
-        for(int i = 0; i<itemInternals.size();i++){
+        for (int i = 0; i < itemInternals.size(); i++) {
             array.add(itemInternals.get(i).dialog);
         }
         return array;
@@ -401,7 +391,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
     }
 
     public void updateHasHints() {
-        hasHints = (folderId == 0 ||folderId == Constants.followDialogList ) && dialogsType == DIALOGS_TYPE_DEFAULT && !isOnlySelect && !MessagesController.getInstance(currentAccount).hintDialogs.isEmpty();
+        hasHints = (folderId == 0 || folderId == Constants.followDialogList) && dialogsType == DIALOGS_TYPE_DEFAULT && !isOnlySelect && !MessagesController.getInstance(currentAccount).hintDialogs.isEmpty();
     }
 
     public void updateList(RecyclerListView recyclerListView, boolean hasHiddenArchive, float tabsTranslation) {
@@ -1182,7 +1172,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
     }
 
 
-    private void updateItemListAfterGetData( List<TLRPC.Dialog> array,MessagesController messagesController){
+    private void updateItemListAfterGetData(List<TLRPC.Dialog> array, MessagesController messagesController) {
         dialogsCount = array.size();
         isEmpty = false;
 
@@ -1280,9 +1270,9 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
         }
 
         if (!forceShowEmptyCell && dialogsType != 7 && dialogsType != 8 && !MessagesController.getInstance(currentAccount).isDialogsEndReached(folderId)) {
-            if(folderId != Constants.followDialogList)
-            itemInternals.add(new ItemInternal(VIEW_TYPE_FLICKER));
-            else  itemInternals.add(new ItemInternal(VIEW_TYPE_DIVIDER));
+            if (folderId != Constants.followDialogList)
+                itemInternals.add(new ItemInternal(VIEW_TYPE_FLICKER));
+            else itemInternals.add(new ItemInternal(VIEW_TYPE_DIVIDER));
         } else if (dialogsCount == 0) {
             isEmpty = true;
             itemInternals.add(new ItemInternal(requestPeerType == null ? VIEW_TYPE_EMPTY : VIEW_TYPE_REQUIRED_EMPTY));
@@ -1294,40 +1284,34 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
         }
     }
 
-    private void updateItemList() {
-
-        // тут начинается заполнение айтемами
-       // TLRPC.Dialog test1= new TLRPC.TL_dialog();
-//        test1.id = -1166834860;
-//        ArrayList<TLRPC.Dialog> array = new ArrayList<TLRPC.Dialog>();
-//        array.add(test1);
-//        updateItemListAfterGetData(array,messagesController);
-        if (folderId == Constants.followDialogList) {
-            compositeDisposable.add(followDialogRepo.getAllDialogs()
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe((listFollowed -> {
-                        itemInternals.clear();
-                        updateHasHints();
-                        MessagesController messagesController = MessagesController.getInstance(currentAccount);
-                       final List<TLRPC.Dialog> listDialogs = new ArrayList<TLRPC.Dialog>();
-                        for(int i =0;i<listFollowed.size();i++){
-                            TLRPC.Dialog test = new TLRPC.TL_dialog();
-                            test.id = listFollowed.get(i).idDialog;
-                            listDialogs.add(test);
-                        }
-                        updateItemListAfterGetData(listDialogs,messagesController);
-                        super.notifyDataSetChanged();
-                    }), (error -> {
-                        // что то на ошибку
-                    })));
-        }else {
-            itemInternals.clear();
-            updateHasHints();
-            MessagesController messagesController = MessagesController.getInstance(currentAccount);
-            final List<TLRPC.Dialog> array = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
-            updateItemListAfterGetData(array,messagesController);
-            super.notifyDataSetChanged();
+    private void updateWithFollowList(List<FollowDialog> followDialogList) {
+        itemInternals.clear();
+        updateHasHints();
+        MessagesController messagesController = MessagesController.getInstance(currentAccount);
+        final List<TLRPC.Dialog> listDialogs = new ArrayList<TLRPC.Dialog>();
+        for (int i = 0; i < followDialogList.size(); i++) {
+            TLRPC.Dialog test = new TLRPC.TL_dialog();
+            test.id = followDialogList.get(i).idDialog;
+            listDialogs.add(test);
         }
+        updateItemListAfterGetData(listDialogs, messagesController);
+        super.notifyDataSetChanged();
     }
+
+    private void updateItemListWithoutFollow() {
+        itemInternals.clear();
+        updateHasHints();
+        MessagesController messagesController = MessagesController.getInstance(currentAccount);
+        final List<TLRPC.Dialog> array = parentFragment.getDialogsArray(currentAccount, dialogsType, folderId, dialogsListFrozen);
+        updateItemListAfterGetData(array, messagesController);
+        super.notifyDataSetChanged();
+    }
+
+    private void updateItemList() {
+        updateItems(
+                folderId,
+                this::updateWithFollowList,
+                this::updateItemListWithoutFollow);
+    }
+
 }

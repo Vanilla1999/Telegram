@@ -210,7 +210,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import test.repository.FollowDialogRepo;
 import test.utils.Constants;
 
 public class DialogsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, FloatingDebugProvider {
@@ -227,7 +226,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean allowGlobalSearch = true;
     private TLRPC.RequestPeerType requestPeerType;
     private long requestPeerBotId;
-    private FollowDialogRepo followDialogRepo;
     public MessagesStorage.TopicKey getOpenedDialogId() {
         return openedDialogId;
     }
@@ -3615,7 +3613,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                 viewPage.pullForegroundDrawable.setWillDraw(viewPage.archivePullViewState != ARCHIVE_ITEM_STATE_PINNED);
             }
 
-            viewPage.dialogsAdapter = new DialogsAdapter(this, context, viewPage.dialogsType, folderId, onlySelect, selectedDialogs, currentAccount, requestPeerType,compositeDisposable,followDialogRepo) {
+            viewPage.dialogsAdapter = new DialogsAdapter(this, context, viewPage.dialogsType, folderId, onlySelect, selectedDialogs, currentAccount, requestPeerType) {
                 @Override
                 public void notifyDataSetChanged() {
                     viewPage.lastItemsCount = getItemCount();
@@ -4545,7 +4543,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     LinearLayoutManager layoutManager = new LinearLayoutManager(context);
                     layoutManager.setNeedFixEndGap(false);
                     transitionPage.animationSupportListView.setLayoutManager(layoutManager);
-                    transitionPage.animationSupportDialogsAdapter = new DialogsAdapter(DialogsActivity.this, context, transitionPage.dialogsType, folderId, onlySelect, selectedDialogs, currentAccount, requestPeerType,compositeDisposable,followDialogRepo);
+                    transitionPage.animationSupportDialogsAdapter = new DialogsAdapter(DialogsActivity.this, context, transitionPage.dialogsType, folderId, onlySelect, selectedDialogs, currentAccount, requestPeerType);
                     transitionPage.animationSupportDialogsAdapter.setIsTransitionSupport();
                     transitionPage.animationSupportListView.setAdapter(transitionPage.animationSupportDialogsAdapter);
                     transitionPage.addView(transitionPage.animationSupportListView);
