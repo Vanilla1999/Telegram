@@ -1309,7 +1309,7 @@ public class DialogsAdapter extends RecyclerListView.SelectionAdapter implements
 
     private void updateItemList() {
         updateItems(
-                folderId,
+                parentFragment,
                 this::updateWithFollowList,
                 this::updateItemListWithoutFollow);
     }

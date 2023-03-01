@@ -8,10 +8,6 @@
 
 package org.telegram.ui;
 
-import static test.ui.BaseTestActivity.clearCompositeDisposeble;
-import static test.ui.BaseTestActivity.clearFollowRepo;
-import static test.ui.BaseTestActivity.initCompositeDisposeble;
-import static test.ui.DialogActivity.TestStatckDialogActivity.initFollowRepo;
 
 import android.Manifest;
 import android.animation.Animator;
@@ -210,6 +206,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import test.ui.DialogActivity.FollowDialogsActivity;
 import test.utils.Constants;
 
 public class DialogsActivity extends BaseFragment implements NotificationCenter.NotificationCenterDelegate, FloatingDebugProvider {
@@ -219,7 +216,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean canShowFilterTabsView;
     private boolean filterTabsViewIsVisible;
     private int initialSearchType = -1;
-    private int FOLLOWED_CHATS = 123;
     private final String ACTION_MODE_SEARCH_DIALOGS_TAG = "search_dialogs_action_mode";
     private boolean isFirstTab = true;
     private boolean rightFragmentTransitionInProgress;
@@ -298,14 +294,14 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean downloadsItemVisible;
     private ActionBarMenuItem proxyItem;
     private boolean proxyItemVisible;
-    private ActionBarMenuItem searchItem;
+    protected ActionBarMenuItem searchItem;
     private ActionBarMenuItem speedItem;
     private AnimatorSet speedAnimator;
     private ActionBarMenuItem doneItem;
     private ProxyDrawable proxyDrawable;
     private RLottieImageView floatingButton;
     private RadialProgressView floatingProgressView;
-    private FrameLayout floatingButtonContainer;
+    protected FrameLayout floatingButtonContainer;
     private ChatAvatarContainer avatarContainer;
     private UndoView[] undoView = new UndoView[2];
     private FilterTabsView filterTabsView;
@@ -347,7 +343,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     private boolean updatePullAfterScroll;
 
     private MenuDrawable menuDrawable;
-    private BackDrawable backDrawable;
+    protected BackDrawable backDrawable;
 
     private Paint actionBarDefaultPaint = new Paint();
 
@@ -2173,7 +2169,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                                 }
                             });
                         }
-                        if ((folderId != 0 && folderId != FOLLOWED_CHATS) && frozenDialogsList.isEmpty()) {
+                        if ((folderId != 0) && frozenDialogsList.isEmpty()) {
                             parentPage.listView.setEmptyView(null);
                             parentPage.progressView.setVisibility(View.INVISIBLE);
                         }
@@ -2421,8 +2417,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
-        clearFollowRepo();
-        clearCompositeDisposeble();
         if (searchString == null) {
             getNotificationCenter().removeObserver(this, NotificationCenter.dialogsNeedReload);
             NotificationCenter.getGlobalInstance().removeObserver(this, NotificationCenter.emojiLoaded);
@@ -2537,10 +2531,6 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
 
     @Override
     public View createView(final Context context) {
-        if(folderId == Constants.followDialogList) {
-            initFollowRepo();
-            initCompositeDisposeble();
-        }
         searching = false;
         searchWas = false;
         pacmanAnimation = null;
@@ -2742,17 +2732,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             if (searchString != null || folderId != 0) {
                 actionBar.setBackButtonDrawable(backDrawable = new BackDrawable(false));
             } else {
-                if(folderId == FOLLOWED_CHATS){
-                    actionBar.setBackButtonDrawable(backDrawable = new BackDrawable(false));
-                } else {
                     actionBar.setBackButtonDrawable(menuDrawable = new MenuDrawable());
                     menuDrawable.setRoundCap();
                     actionBar.setBackButtonContentDescription(LocaleController.getString("AccDescrOpenMenu", R.string.AccDescrOpenMenu));
-                }
             }
-            if (folderId == FOLLOWED_CHATS) {
-                actionBar.setTitle(LocaleController.getString("FollowedChats", R.string.FollowedChats));
-            } else if (folderId != 0 && folderId != FOLLOWED_CHATS) {
+            if (folderId != 0) {
                 actionBar.setTitle(LocaleController.getString("ArchivedChats", R.string.ArchivedChats));
             } else {
                 statusDrawable = new AnimatedEmojiDrawable.SwapAnimatedEmojiDrawable(null, AndroidUtilities.dp(26));
@@ -4414,7 +4398,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             contentView.addView(undoView[a], LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.BOTTOM | Gravity.LEFT, 8, 0, 8, 8));
         }
 
-        if (folderId != 0 && folderId != FOLLOWED_CHATS) {
+        if (folderId != 0) {
             viewPages[0].listView.setGlowColor(Theme.getColor(Theme.key_actionBarDefaultArchived));
             actionBar.setTitleColor(Theme.getColor(Theme.key_actionBarDefaultArchivedTitle));
             actionBar.setItemsColor(Theme.getColor(Theme.key_actionBarDefaultArchivedIcon), false);
@@ -4446,7 +4430,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             contentView.addView(blurredView, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.MATCH_PARENT));
         }
 
-        actionBarDefaultPaint.setColor(Theme.getColor((folderId == 0 || folderId == FOLLOWED_CHATS) ? Theme.key_actionBarDefault : Theme.key_actionBarDefaultArchived));
+        actionBarDefaultPaint.setColor(Theme.getColor((folderId == 0) ? Theme.key_actionBarDefault : Theme.key_actionBarDefaultArchived));
         if (inPreviewMode) {
             final TLRPC.User currentUser = getUserConfig().getCurrentUser();
             avatarContainer = new ChatAvatarContainer(actionBar.getContext(), null, false);
@@ -4628,7 +4612,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                     actionBar.getBackButton().setAlpha(progress == 1f ? 0f : 1f);
                 }
 
-                if (folderId != 0 && folderId!= FOLLOWED_CHATS) {
+                if (folderId != 0) {
                     actionBarDefaultPaint.setColor(
                         ColorUtils.blendARGB(
                             Theme.getColor(Theme.key_actionBarDefaultArchived),
@@ -5305,7 +5289,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
                             } else {
                                 hideActionMode(true);
                             }
-                        } else if (onlySelect || folderId != 0) {
+                        } else if (onlySelect || folderId != 0 ) {
                             finishFragment();
                         } else if (parentLayout != null) {
                             parentLayout.getDrawerLayoutContainer().openDrawer(false);
@@ -5980,7 +5964,7 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
             updateDrawerSwipeEnabled();
 
             searchViewPager.clear();
-            if ((folderId != 0 && folderId != FOLLOWED_CHATS) && (rightSlidingDialogContainer == null || !rightSlidingDialogContainer.hasFragment())) {
+            if ((folderId != 0) && (rightSlidingDialogContainer == null || !rightSlidingDialogContainer.hasFragment())) {
                 FiltersView.MediaFilterData filterData = new FiltersView.MediaFilterData(R.drawable.chats_archive, LocaleController.getString("ArchiveSearchFilter", R.string.ArchiveSearchFilter), null, FiltersView.FILTER_TYPE_ARCHIVE);
                 addSearchFilter(filterData);
             }
@@ -6292,11 +6276,11 @@ public class DialogsActivity extends BaseFragment implements NotificationCenter.
     public void setSearchAnimationProgress(float progress, boolean full) {
         searchAnimationProgress = progress;
         if (whiteActionBar) {
-            int color1 = (folderId != 0 && folderId != FOLLOWED_CHATS) ? Theme.getColor(Theme.key_actionBarDefaultArchivedIcon) : Theme.getColor(Theme.key_actionBarDefaultIcon);
+            int color1 = (folderId != 0) ? Theme.getColor(Theme.key_actionBarDefaultArchivedIcon) : Theme.getColor(Theme.key_actionBarDefaultIcon);
             actionBar.setItemsColor(ColorUtils.blendARGB(color1, Theme.getColor(Theme.key_actionBarActionModeDefaultIcon), searchAnimationProgress), false);
             actionBar.setItemsColor(ColorUtils.blendARGB(Theme.getColor(Theme.key_actionBarActionModeDefaultIcon), Theme.getColor(Theme.key_actionBarActionModeDefaultIcon), searchAnimationProgress), true);
 
-            color1 = (folderId != 0 && folderId != FOLLOWED_CHATS) ? Theme.getColor(Theme.key_actionBarDefaultArchivedSelector) : Theme.getColor(Theme.key_actionBarDefaultSelector);
+            color1 = (folderId != 0) ? Theme.getColor(Theme.key_actionBarDefaultArchivedSelector) : Theme.getColor(Theme.key_actionBarDefaultSelector);
             int color2 = Theme.getColor(Theme.key_actionBarActionModeDefaultSelector);
             actionBar.setItemsBackgroundColor(ColorUtils.blendARGB(color1, color2, searchAnimationProgress), false);
         }
