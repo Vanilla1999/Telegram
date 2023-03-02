@@ -2192,6 +2192,9 @@
     <string name="AskButton">Ask a volunteer</string>
     <string name="TelegramFAQ">Telegram FAQ</string>
     <string name="TelegramFaq">Telegram FAQ</string>
+    <string name="FollowedChats">Followed chats</string>
+    <string name="FollowedChatsAdd">Add to followed</string>
+    <string name="FollowedChatsRemove">Remove from followed</string>
     <string name="TelegramFeatures">Telegram Features</string>
     <string name="TelegramFeaturesUrl">https://t.me/TelegramTips</string>
     <string name="AddAccount">Add Account</string>

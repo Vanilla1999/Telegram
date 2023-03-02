@@ -263,6 +263,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
         int inviteIcon;
         int helpIcon;
         int peopleNearbyIcon;
+        int flollowedChats;
         if (eventType == 0) {
             newGroupIcon = R.drawable.msg_groups_ny;
             //newSecretIcon = R.drawable.msg_secret_ny;
@@ -274,6 +275,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             inviteIcon = R.drawable.msg_invite_ny;
             helpIcon = R.drawable.msg_help_ny;
             peopleNearbyIcon = R.drawable.msg_nearby_ny;
+            flollowedChats = R.drawable.msg_nearby;
         } else if (eventType == 1) {
             newGroupIcon = R.drawable.msg_groups_14;
             //newSecretIcon = R.drawable.msg_secret_14;
@@ -285,6 +287,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             inviteIcon = R.drawable.msg_secret_ny;
             helpIcon = R.drawable.msg_help;
             peopleNearbyIcon = R.drawable.msg_secret_14;
+            flollowedChats = R.drawable.msg_nearby;
         } else if (eventType == 2) {
             newGroupIcon = R.drawable.msg_groups_hw;
             //newSecretIcon = R.drawable.msg_secret_hw;
@@ -296,6 +299,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             inviteIcon = R.drawable.msg_invite_hw;
             helpIcon = R.drawable.msg_help_hw;
             peopleNearbyIcon = R.drawable.msg_secret_hw;
+            flollowedChats = R.drawable.msg_nearby;
         } else {
             newGroupIcon = R.drawable.msg_groups;
             //newSecretIcon = R.drawable.msg_secret;
@@ -307,6 +311,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             inviteIcon = R.drawable.msg_invite;
             helpIcon = R.drawable.msg_help;
             peopleNearbyIcon = R.drawable.msg_nearby;
+            flollowedChats = R.drawable.msg_nearby;
         }
         UserConfig me = UserConfig.getInstance(UserConfig.selectedAccount);
         if (me != null && me.isPremium()) {
@@ -326,6 +331,7 @@ public class DrawerLayoutAdapter extends RecyclerListView.SelectionAdapter {
             items.add(new Item(12, LocaleController.getString("PeopleNearby", R.string.PeopleNearby), peopleNearbyIcon));
         }
         items.add(new Item(11, LocaleController.getString("SavedMessages", R.string.SavedMessages), savedIcon));
+        items.add(new Item(14, LocaleController.getString("FollowedChats", R.string.FollowedChats), flollowedChats));
         items.add(new Item(8, LocaleController.getString("Settings", R.string.Settings), settingsIcon));
         items.add(null); // divider
         items.add(new Item(7, LocaleController.getString("InviteFriends", R.string.InviteFriends), inviteIcon));

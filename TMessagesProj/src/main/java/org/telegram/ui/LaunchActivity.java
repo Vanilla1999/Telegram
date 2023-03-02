@@ -198,6 +198,8 @@ import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import test.ui.DialogActivity.FollowDialogsActivity;
+
 public class LaunchActivity extends BasePermissionsActivity implements INavigationLayout.INavigationLayoutDelegate, NotificationCenter.NotificationCenterDelegate, DialogsActivity.DialogsActivityDelegate {
     public final static Pattern PREFIX_T_ME_PATTERN = Pattern.compile("^(?:http(?:s|)://|)([A-z0-9-]+?)\\.t\\.me");
 
@@ -563,6 +565,10 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                     Bundle args = new Bundle();
                     args.putLong("user_id", UserConfig.getInstance(currentAccount).getClientUserId());
                     presentFragment(new ChatActivity(args));
+                    drawerLayoutContainer.closeDrawer(false);
+                } else if (id == 14) {
+                    Bundle args = new Bundle();
+                    presentFragment(new FollowDialogsActivity(args));
                     drawerLayoutContainer.closeDrawer(false);
                 } else if (id == 12) {
                     if (Build.VERSION.SDK_INT >= 23) {

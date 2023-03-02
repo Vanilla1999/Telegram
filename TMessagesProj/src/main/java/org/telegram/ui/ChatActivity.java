@@ -8,6 +8,13 @@
 
 package org.telegram.ui;
 
+import static test.ui.ChatAcitity.TestStaticChatActivity.addFollowToHeaderItem;
+import static test.ui.ChatAcitity.TestStaticChatActivity.clearCompositeDisposeble;
+import static test.ui.ChatAcitity.TestStaticChatActivity.clearFollowRepo;
+import static test.ui.ChatAcitity.TestStaticChatActivity.ifClickToFollowChat;
+import static test.ui.ChatAcitity.TestStaticChatActivity.ifClickToUnFollowChat;
+import static test.ui.ChatAcitity.TestStaticChatActivity.initCompositeDisposeble;
+
 import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -832,7 +839,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             AndroidUtilities.runOnUIThread(updateDeleteItemRunnable, 1000);
         }
     };
-
     private ChatActivityDelegate chatActivityDelegate;
     private RecyclerAnimationScrollHelper chatScrollHelper;
 
@@ -2051,7 +2057,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         scrollToTopOnResume = arguments.getBoolean("scrollToTopOnResume", false);
         needRemovePreviousSameChatActivity = arguments.getBoolean("need_remove_previous_same_chat_activity", true);
         justCreatedChat = arguments.getBoolean("just_created_chat", false);
-
         if (chatId != 0) {
             currentChat = getMessagesController().getChat(chatId);
             if (currentChat == null) {
@@ -2503,6 +2508,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
     @Override
     public void onFragmentDestroy() {
         super.onFragmentDestroy();
+        clearCompositeDisposeble();
+        clearFollowRepo();
         if (chatActivityEnterView != null) {
             chatActivityEnterView.onDestroy();
         }
@@ -2747,7 +2754,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         cantSaveMessagesCount = 0;
         canSaveMusicCount = 0;
         canSaveDocumentsCount = 0;
-
         hasOwnBackground = true;
         if (chatAttachAlert != null) {
             try {
@@ -2772,6 +2778,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         actionBar.setActionBarMenuOnItemClick(new ActionBar.ActionBarMenuOnItemClick() {
             @Override
             public void onItemClick(final int id) {
+                //
                 if (id == -1) {
                     if (actionBar.isActionModeShowed()) {
                         clearSelectionMode();
@@ -3010,6 +3017,8 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
 //                    bundle.putLong("chat_id", -dialog_id);
 //                    presentFragment(new TopicsFragment(bundle));
                 }
+                ifClickToFollowChat(headerItem,id,arguments);
+                ifClickToUnFollowChat(headerItem,id,arguments);
             }
         });
         View backButton = actionBar.getBackButton();
@@ -3318,6 +3327,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
                     }
                 }
             }
+            addFollowToHeaderItem(headerItem,arguments,currentChat);
             if (currentUser != null && currentUser.self) {
                 headerItem.lazilyAddSubItem(add_shortcut, R.drawable.msg_home, LocaleController.getString("AddShortcut", R.string.AddShortcut));
             }
@@ -16247,7 +16257,7 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
             if (isFirstLoading) {
                 AndroidUtilities.runOnUIThread(() -> {
                     resumeDelayedFragmentAnimation();
-                    
+
                     AndroidUtilities.cancelRunOnUIThread(fragmentTransitionRunnable);
                     fragmentTransitionRunnable.run();
                     getNotificationCenter().runDelayedNotifications();
@@ -22360,117 +22370,6 @@ public class ChatActivity extends BaseFragment implements NotificationCenter.Not
         }
         checkChecksHint();
 
-        Bulletin.addDelegate(this, bulletinDelegate = new Bulletin.Delegate() {
-            @Override
-            public int getBottomOffset(int tag) {
-                if (tag == 1) {
-                    return 0;
-                }
-                int height;
-                if (chatActivityEnterView != null && chatActivityEnterView.getVisibility() == View.VISIBLE) {
-                    if (contentView.getKeyboardHeight() < AndroidUtilities.dp(20) && chatActivityEnterView.isPopupShowing() || chatActivityEnterView.panelAnimationInProgress()) {
-                        height = chatActivityEnterView.getHeight() + chatActivityEnterView.getEmojiPadding();
-                    } else {
-                        height = chatActivityEnterView.getHeight();
-                    }
-                } else {
-                    height = AndroidUtilities.dp(51);
-                }
-                if (chatActivityEnterView.panelAnimationInProgress()) {
-                    float translationY = bottomPanelTranslationY - chatActivityEnterView.getEmojiPadding();
-                    height += translationY;
-                }
-                height += contentPanTranslation;
-                return height - AndroidUtilities.dp(1.5f);
-            }
-
-            @Override
-            public boolean allowLayoutChanges() {
-                return false;
-            }
-        });
-
-        checkActionBarMenu(false);
-        if (replyImageLocation != null && replyImageView != null) {
-            replyImageView.setImage(ImageLocation.getForObject(replyImageLocation, replyImageLocationObject), "50_50", ImageLocation.getForObject(replyImageThumbLocation, replyImageLocationObject), "50_50_b", null, replyImageSize, replyImageCacheType, replyingMessageObject);
-        }
-        if (pinnedImageLocation != null && pinnedMessageImageView != null) {
-            MessageObject pinnedMessageObject = pinnedMessageObjects.get(currentPinnedMessageId);
-            pinnedMessageImageView[0].setImage(ImageLocation.getForObject(pinnedImageLocation, pinnedImageLocationObject), "50_50", ImageLocation.getForObject(pinnedImageThumbLocation, pinnedImageLocationObject), "50_50_b", null, pinnedImageSize, pinnedImageCacheType, pinnedMessageObject);
-            pinnedMessageImageView[0].setHasBlur(pinnedImageHasBlur);
-        }
-
-        if (chatMode == 0) {
-            getNotificationsController().setOpenedDialogId(dialog_id, getTopicId());
-        }
-        getMessagesController().setLastVisibleDialogId(dialog_id, chatMode == MODE_SCHEDULED, true);
-        if (scrollToTopOnResume) {
-            if (scrollToTopUnReadOnResume && scrollToMessage != null) {
-                if (chatListView != null) {
-                    int yOffset;
-                    boolean bottom = true;
-                    if (scrollToMessagePosition == -9000) {
-                        yOffset = getScrollOffsetForMessage(scrollToMessage);
-                        bottom = false;
-                    } else if (scrollToMessagePosition == -10000) {
-                        yOffset = -AndroidUtilities.dp(11);
-                        bottom = false;
-                    } else {
-                        yOffset = scrollToMessagePosition;
-                    }
-                    chatLayoutManager.scrollToPositionWithOffset(chatAdapter.messagesStartRow + messages.indexOf(scrollToMessage), yOffset, bottom);
-                }
-            } else {
-                moveScrollToLastMessage(false);
-            }
-            scrollToTopUnReadOnResume = false;
-            scrollToTopOnResume = false;
-            scrollToMessage = null;
-        }
-
-        paused = false;
-        pausedOnLastMessage = false;
-        checkScrollForLoad(false);
-        if (wasPaused) {
-            wasPaused = false;
-            if (chatAdapter != null) {
-                chatAdapter.notifyDataSetChanged(false);
-            }
-        }
-
-        fixLayout();
-        applyDraftMaybe(false);
-        if (bottomOverlayChat != null && bottomOverlayChat.getVisibility() != View.VISIBLE && !actionBar.isSearchFieldVisible()) {
-            chatActivityEnterView.setFieldFocused(true);
-        }
-        if (chatActivityEnterView != null) {
-            chatActivityEnterView.onResume();
-        }
-        if (currentUser != null) {
-            chatEnterTime = System.currentTimeMillis();
-            chatLeaveTime = 0;
-        }
-
-        if (startVideoEdit != null) {
-            AndroidUtilities.runOnUIThread(() -> {
-                openVideoEditor(startVideoEdit, null);
-                startVideoEdit = null;
-            });
-        }
-
-        if (chatListView != null && (chatActivityEnterView == null || !chatActivityEnterView.isEditingMessage())) {
-            chatListView.setOnItemLongClickListener(onItemLongClickListener);
-            chatListView.setOnItemClickListener(onItemClickListener);
-            chatListView.setLongClickable(true);
-        }
-        checkBotCommands();
-        updateTitle(false);
-        showGigagroupConvertAlert();
-
-        if (pullingDownOffset != 0) {
-            pullingDownOffset = 0;
-            chatListView.invalidate();
-        }
     }
 
     public float getPullingDownOffset() {

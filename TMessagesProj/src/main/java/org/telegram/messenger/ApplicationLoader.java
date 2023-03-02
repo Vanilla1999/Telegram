@@ -32,6 +32,7 @@ import android.telephony.TelephonyManager;
 
 import androidx.annotation.NonNull;
 import androidx.multidex.MultiDex;
+import androidx.room.Room;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -43,6 +44,8 @@ import org.telegram.ui.Components.ForegroundDetector;
 import org.telegram.ui.LauncherIconController;
 
 import java.io.File;
+
+import test.room.DatabaseMain;
 
 public class ApplicationLoader extends Application {
 
@@ -60,7 +63,7 @@ public class ApplicationLoader extends Application {
     private static int lastKnownNetworkType = -1;
 
     public static long startTime;
-
+    public static ApplicationLoader instance;
     public static volatile boolean isScreenOn = false;
     public static volatile boolean mainInterfacePaused = true;
     public static volatile boolean mainInterfaceStopped = true;
@@ -72,7 +75,7 @@ public class ApplicationLoader extends Application {
     private static PushListenerController.IPushListenerServiceProvider pushProvider;
     private static IMapsProvider mapsProvider;
     private static ILocationServiceProvider locationServiceProvider;
-
+    private DatabaseMain database;
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
@@ -238,6 +241,14 @@ public class ApplicationLoader extends Application {
         super();
     }
 
+    public static ApplicationLoader getInstance() {
+        return instance;
+    }
+
+    public DatabaseMain getDatabase() {
+        return database;
+    }
+
     @Override
     public void onCreate() {
         applicationLoaderInstance = this;
@@ -248,7 +259,9 @@ public class ApplicationLoader extends Application {
         }
 
         super.onCreate();
-
+        instance = this;
+        database = Room.databaseBuilder(this, DatabaseMain.class, "database")
+                .build();
         if (BuildVars.LOGS_ENABLED) {
             FileLog.d("app start time = " + (startTime = SystemClock.elapsedRealtime()));
             FileLog.d("buildVersion = " + BuildVars.BUILD_VERSION);
